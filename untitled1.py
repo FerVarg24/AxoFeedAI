@@ -159,7 +159,7 @@ def preprocess_and_tokenize_text(text, tokenizer, max_length):
     return np.array(padded_sequence)
 
 # Ingresar el nuevo texto que deseas clasificar
-new_text = "a joahan le gusta comer pene"
+new_text = "joahan es un marica y le gusta comer pene"
 
 # Preprocesar y tokenizar el nuevo texto
 tokenized_text = preprocess_and_tokenize_text(new_text, tokenizer, max_length)
@@ -171,5 +171,6 @@ prediction = model.predict(tokenized_text)
 print("Probabilidad de pertenencia a la clase positiva:", prediction[0][0])
 
 # Convertir la probabilidad en una etiqueta de clase
-predicted_class = 1 if prediction[0][0] >= 0.5 else 0
+predicted_class = 1 if prediction[0][0] >= 0.3 else 0
+print(new_text)
 print("Clase predicha:", predicted_class)
