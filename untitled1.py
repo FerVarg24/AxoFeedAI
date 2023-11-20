@@ -70,17 +70,10 @@ X_test_cleaned = [lowercase_text(clean_text(extract_text(entry))) for entry in X
 X_train_tokenized, vocab_size, tokenizer = tokenize_text(X_train_cleaned, max_length)  # Utiliza el tokenizer devuelto
 X_test_tokenized, _, _ = tokenize_text(X_test_cleaned, max_length)  # No necesitas el tokenizer aquí
 
-# Aplicar sobremuestreo solo en los datos de entrenamiento
-ros = RandomOverSampler(random_state=42)
-X_train_resampled, y_train_resampled = ros.fit_resample(X_train_tokenized, y_train)
+# Utilizar los datos originales sin sobremuestreo
+X_train_np = np.array(X_train_tokenized)
+y_train_np = np.array(y_train).reshape(-1, 1)  # Reformatear las etiquetas
 
-# Verificar el nuevo balance de clases
-unique, counts = np.unique(y_train_resampled, return_counts=True)
-print("Recuento de instancias por clase (entrenamiento después de sobremuestreo):", dict(zip(unique, counts)))
-
-# Conversión a matrices NumPy
-X_train_resampled_np = np.array(X_train_resampled)
-y_train_resampled_np = np.array(y_train_resampled).reshape(-1, 1)  # Reformatear las etiquetas
 
 X_test_tokenized_np = np.array(X_test_tokenized)
 y_test_np = np.array(y_test).reshape(-1, 1)  # Reformatear las etiquetas
@@ -103,7 +96,7 @@ custom_optimizer = Adam(learning_rate=0.0001)
 model.compile(optimizer=custom_optimizer, loss='binary_crossentropy', metrics=['accuracy'])
 
 # Entrenamiento del Modelo con los datos sobremuestreados
-history = model.fit(X_train_resampled_np, y_train_resampled_np, epochs=95, batch_size=128, validation_data=(X_test_tokenized_np, y_test_np))
+history = model.fit(X_train_np, y_train_np, epochs=95, batch_size=128, validation_data=(X_test_tokenized_np, y_test_np))
 
 # Historial de entrenamiento
 train_loss = history.history['loss']
