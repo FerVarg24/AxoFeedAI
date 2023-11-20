@@ -40,7 +40,7 @@ def tokenize_text(text_data, max_length):
     return padded_sequences, vocab_size, tokenizer
 
 # Especifica la ruta de tus embeddings preprocesados
-filename = "GoogleNews-vectors-negative300.bin/GoogleNews-vectors-negative300.bin"
+filename = "../Datasets/GoogleNews-vectors-negative300.bin/GoogleNews-vectors-negative300.bin"
 word2vec_model = KeyedVectors.load_word2vec_format(filename, binary=True)
 
 # Lee el contenido del archivo con tu dataset
@@ -88,7 +88,7 @@ for word, i in tokenizer.word_index.items():
 
 model = Sequential([
     Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=max_length, weights=[embedding_matrix], trainable=False),
-    Bidirectional(LSTM(64, return_sequences=True, kernel_regularizer=l2(0.0001), recurrent_regularizer=l2(0.0001))),
+    Bidirectional(LSTM(64, return_sequences=True, kernel_regularizer=l2(0.01), recurrent_regularizer=l2(0.01))),
     Dropout(0.5),
     Dense(1, activation='sigmoid', kernel_regularizer=l2(0.01))
 ])
@@ -159,7 +159,7 @@ def preprocess_and_tokenize_text(text, tokenizer, max_length):
     return np.array(padded_sequence)
 
 # Ingresar el nuevo texto que deseas clasificar
-new_text = "hola"
+new_text = "a joahan le gusta comer pene"
 
 # Preprocesar y tokenizar el nuevo texto
 tokenized_text = preprocess_and_tokenize_text(new_text, tokenizer, max_length)
