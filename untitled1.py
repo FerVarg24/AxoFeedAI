@@ -60,7 +60,7 @@ for entry in dataset:
     labels.append(label)
 
 # División del Conjunto de Datos
-X_train, X_test, y_train, y_test = train_test_split(text_data, labels, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(text_data, labels, test_size=0.1, random_state=42)
 
 # Preprocesamiento y Tokenización de Datos
 max_length = 50  # Longitud máxima de las secuencias
@@ -103,7 +103,7 @@ custom_optimizer = Adam(learning_rate=0.0001)
 model.compile(optimizer=custom_optimizer, loss='binary_crossentropy', metrics=['accuracy'])
 
 # Entrenamiento del Modelo con los datos sobremuestreados
-history = model.fit(X_train_resampled_np, y_train_resampled_np, epochs=95, batch_size=16, validation_data=(X_test_tokenized_np, y_test_np))
+history = model.fit(X_train_resampled_np, y_train_resampled_np, epochs=95, batch_size=128, validation_data=(X_test_tokenized_np, y_test_np))
 
 # Historial de entrenamiento
 train_loss = history.history['loss']
