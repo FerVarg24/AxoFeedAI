@@ -78,6 +78,10 @@ y_train_np = np.array(y_train).reshape(-1, 1)  # Reformatear las etiquetas
 X_test_tokenized_np = np.array(X_test_tokenized)
 y_test_np = np.array(y_test).reshape(-1, 1)  # Reformatear las etiquetas
 
+# Utilizar oversampling para equilibrar las clases en el conjunto de entrenamiento
+oversampler = RandomOverSampler(random_state=42)
+X_train_resampled, y_train_resampled = oversampler.fit_resample(X_train_np, y_train_np)
+
 # Construcción del Modelo con embeddings preprocesados
 embedding_dim = 300  # Dimensión del espacio de embedding
 
@@ -88,15 +92,17 @@ for word, i in tokenizer.word_index.items():
 
 model = Sequential([
     Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=max_length, weights=[embedding_matrix], trainable=False),
-    Bidirectional(LSTM(64, return_sequences=True, kernel_regularizer=l2(0.01), recurrent_regularizer=l2(0.01))),
+    Bidirectional(LSTM(64, return_sequences=False, kernel_regularizer=l2(0.0001), recurrent_regularizer=l2(0.0001))),
     Dropout(0.5),
     Dense(1, activation='sigmoid', kernel_regularizer=l2(0.01))
 ])
+
 custom_optimizer = Adam(learning_rate=0.0001) 
 model.compile(optimizer=custom_optimizer, loss='binary_crossentropy', metrics=['accuracy'])
 
 # Entrenamiento del Modelo con los datos sobremuestreados
-history = model.fit(X_train_np, y_train_np, epochs=95, batch_size=128, validation_data=(X_test_tokenized_np, y_test_np))
+history = model.fit(X_train_resampled, y_train_resampled, epochs=95, batch_size=128, validation_data=(X_test_tokenized_np, y_test_np))
+
 
 # Historial de entrenamiento
 train_loss = history.history['loss']
@@ -159,7 +165,7 @@ def preprocess_and_tokenize_text(text, tokenizer, max_length):
     return np.array(padded_sequence)
 
 # Ingresar el nuevo texto que deseas clasificar
-new_text = "joahan es un marica y le gusta comer pene"
+new_text = "hola"
 
 # Preprocesar y tokenizar el nuevo texto
 tokenized_text = preprocess_and_tokenize_text(new_text, tokenizer, max_length)
@@ -171,6 +177,34 @@ prediction = model.predict(tokenized_text)
 print("Probabilidad de pertenencia a la clase positiva:", prediction[0][0])
 
 # Convertir la probabilidad en una etiqueta de clase
-predicted_class = 1 if prediction[0][0] >= 0.3 else 0
+predicted_class = 1 if prediction[0][0] >= 0.34 else 0
 print(new_text)
 print("Clase predicha:", predicted_class)
+if predicted_class == 1 :
+    print("mensaje ofensivo")
+    """
+while True:
+    # Ingresar el nuevo texto que deseas clasificar
+    new_text = input("Ingresa un nuevo texto (o escribe 'salir' para terminar): ")
+
+    # Verificar si se desea salir del bucle
+    if new_text.lower() == 'salir':
+        break
+
+    # Preprocesar y tokenizar el nuevo texto
+    tokenized_text = preprocess_and_tokenize_text(new_text, tokenizer, max_length)
+
+    # Realizar la predicción
+    prediction = model.predict(tokenized_text)
+
+    # Imprimir la predicción
+    print("Probabilidad de pertenencia a la clase positiva:", prediction[0][0])
+
+    # Convertir la probabilidad en una etiqueta de clase
+    predicted_class = 1 if prediction[0][0] >= 0.33 else 0
+    print("Clase predicha:", predicted_class)
+
+    if predicted_class == 1:
+        print("Mensaje ofensivo")
+    else:
+        print("Mensaje no ofensivo")"""
