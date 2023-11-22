@@ -6,6 +6,7 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, Bidirectional, LSTM, Dense
+import matplotlib.pyplot as plt
 
 # Cargar datos
 train_data = pd.read_csv('../Datasets/hateval2019/hateval2019_es_train.csv')
@@ -40,7 +41,7 @@ y_dev_AG = label_encoder.transform(dev_data['AG'])
 
 
 # Construir modelo
-embedding_dim = 100  # Dimensión de los embeddings
+embedding_dim = 300  # Dimensión de los embeddings
 vocab_size = min(max_words, len(tokenizer.word_index) + 1)
 
 model = Sequential()
@@ -52,9 +53,58 @@ model.add(Dense(1, activation='sigmoid'))  # Para la tarea de clasificación bin
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
 # Entrenar el modelo
-model.fit(X_train, y_train_HS, epochs=5, batch_size=32, validation_data=(X_dev, y_dev_HS))
+history = model.fit(X_train, y_train_HS, epochs=5, batch_size=32, validation_data=(X_dev, y_dev_HS))
 
 # Evaluar en datos de prueba
 y_pred = model.predict(X_test)
+
+
+# Visualizar la pérdida y la precisión durante el entrenamiento
+plt.figure(figsize=(12, 4))
+
+# Plotear la pérdida
+plt.subplot(1, 2, 1)
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Training and Validation Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+
+# Plotear la precisión
+plt.subplot(1, 2, 2)
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Training and Validation Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+# Imprimir resultados de prueba
+print("Results on test data:")
+print(y_pred)
+
+# Loop para clasificar palabras ingresadas
+while True:
+    input_text = input("Ingrese una palabra o frase (o escriba 'salir' para terminar): ")
+    
+    if input_text.lower() == 'salir':
+        break
+    
+    # Preprocesar la entrada
+    input_sequence = tokenizer.texts_to_sequences([input_text])
+    input_sequence = pad_sequences(input_sequence, maxlen=max_len)
+    
+    # Realizar la predicción
+    prediction = model.predict(input_sequence)
+    
+    # Clasificar la predicción
+    if prediction[0, 0] >= 0.5:
+        print("Mensaje de odio")
+    else:
+        print("Mensaje inofensivo")
 
 # Puedes ajustar este código para incorporar las otras etiquetas (TR, AG) y realizar ajustes según sea necesario.
