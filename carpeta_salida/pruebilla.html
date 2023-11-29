@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+</head>
+<body>
+    <h1>Clasificación de Texto con TensorFlow.js</h1>
+    
+    <textarea id="textInput" placeholder="Ingrese un texto"></textarea>
+    <button id="btn" onclick="realizarPrediccion()">Realizar Predicción</button>
+    <div id="resultado"></div>
+
+    <script>
+        let model;
+        let wordIndex;
+
+        async function cargarModelo() {
+            try {
+                // Cargar TensorFlow.js
+                await tf.ready();
+
+                // Cargar el modelo
+                const modelPath = 'model.json';  // Ajusta la ruta según tu modelo
+                model = await tf.loadLayersModel(modelPath);
+                console.log('Modelo cargado exitosamente');
+
+                // Cargar el vocabulario (word_index) desde el modelo
+                const metadata = await fetch('metadata.json');  // Ajusta la ruta según tu modelo
+                const metadataJson = await metadata.json();
+                wordIndex = metadataJson.word_index;
+
+                // Habilitar el botón después de cargar el modelo
+                document.getElementById('btn').disabled = false;
+            } catch (error) {
+                console.error('Error al cargar el modelo:', error);
+                alert('Hubo un error al cargar el modelo. Consulta la consola para obtener más detalles.');
+            }
+        }
+
+        async function realizarPrediccion() {
+            try {
+                const textInput = document.getElementById('textInput').value.trim();
+                
+                if (textInput === '') {
+                    alert('Por favor, ingrese un texto antes de realizar la predicción.');
+                    return;
+                }
+
+                // Verificar si el modelo está cargado antes de hacer predicciones
+                if (!model || !wordIndex) {
+                    alert('El modelo no se ha cargado completamente. Inténtalo de nuevo.');
+                    return;
+                }
+
+                console.log('Realizando predicción...');
+
+                // Tokenizar el texto manualmente
+                const words = textInput.split(' ');
+                const sequence = words.map(word => wordIndex[word] || 0);
+
+                // Ajustar la longitud de la secuencia a max_len
+                const maxLen = 100;
+                const paddedSequence = tf.pad(
+                    tf.tensor2d([sequence], [1, sequence.length]),
+                    [[0, 0], [0, maxLen - sequence.length]]
+                );
+
+                // Realizar la predicción
+                const predictions = model.predict(paddedSequence).arraySync();
+
+                // Interpretar las predicciones
+                const esMensajeDeOdio = predictions[0][0] >= 0.5;
+                const resultadoDiv = document.getElementById('resultado');
+                resultadoDiv.innerHTML = `
+                    <p>Predicciones:</p>
+                    <pre>${predictions}</pre>
+                    <p>Resultado: ${esMensajeDeOdio ? 'Mensaje de odio' : 'Mensaje inofensivo'}</p>
+                `;
+
+                console.log('Predicción completada.');
+            } catch (error) {
+                console.error('Error al realizar la predicción:', error);
+                alert('Hubo un error al realizar la predicción. Consulta la consola para obtener más detalles.');
+            }
+        }
+
+        // Deshabilitar el botón al inicio
+        document.getElementById('btn').disabled = true;
+
+        // Cargar el modelo al cargar la página
+        cargarModelo();
+    </script>
+</body>
+</html>
+
